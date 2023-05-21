@@ -4,19 +4,152 @@ const express = require("express");
 const bodyParser = require("body-parser");
 const ejs = require("ejs");
 const mongoose = require('mongoose');
+const port = 3000;
+const app = express();
+
+const uri = "mongodb+srv://priyanshusoni0646:root@cluster0.yyrbswa.mongodb.net/?retryWrites=true&w=majority"
+
+async function connect(){
+  try{
+    await mongoose.connect(uri);
+    console.log("connected to mongodb");
+
+  }catch{
+    console.error(error)
+  }
+}
+connect();
+
+
+document.getElementById('loginForm').addEventListener('submit', login);
+document.getElementById('signupForm').addEventListener('submit', signup);
+
+function login(event) {
+  event.preventDefault();
+
+  const email = document.getElementById('loginEmail').value;
+  const password = document.getElementById('loginPassword').value;
+
+  // Make a request to the server to authenticate the user
+  fetch('/login', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({ email, password })
+  })
+  .then(response => response.json())
+  .then(data => {
+    if (data.success) {
+      alert('Login successful!');
+      window.location.assign("\views\partials\footer.ejs")
+    } else {
+      alert('Login failed. Please try again.');
+    }
+  })
+  .catch(error => {
+    console.error('An error occurred:', error);
+  });
+}
+
+function signup(event) {
+  event.preventDefault();
+
+  const name = document.getElementById('signupName').value;
+  const email = document.getElementById('signupEmail').value;
+  const password = document.getElementById('signupPassword').value;
+
+  // Make a request to the server to create a new user
+  fetch('/signup', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({ name, email, password })
+  })
+  .then(response => response.json())
+  .then(data => {
+    if (data.success) {
+      alert('Signup successful!');
+    } else {
+      alert('Signup failed. Please try again.');
+    }
+  })
+  .catch(error => {
+    console.error('An error occurred:', error);
+  });
+}
+
+
+
+app.use(bodyParser.urlencoded({ extended: false }));
+app.use(bodyParser.json());
+
+// Connect to MongoDB
+mongoose.connect('mongodb://localhost:27017/mydatabase', {
+  useNewUrlParser: true,
+  useUnifiedTopology: true
+});
+
+// Create a user schema and model
+const userSchema = new mongoose.Schema({
+  name: String,
+  email: String,
+  password: String
+});
+
+const User = mongoose.model('User', userSchema);
+
+// Handle login POST request
+app.post('/login', (req, res) => {
+  const { email, password } = req.body;
+
+  // Check if the user exists in the database
+  User.findOne({ email, password }, (err, user) => {
+    if (err) {
+      console.error('An error occurred:', err);
+      res.json({ success: false });
+    } else if (user) {
+      res.json({ success: true });
+    } else {
+      res.json({ success: false });
+    }
+  });
+});
+
+// Handle signup POST request
+app.post('/signup', (req, res) => {
+  const { name, email, password } = req.body;
+
+  // Create a new user and save it to the database
+  const newUser = new User({ name, email, password });
+  newUser.save(err => {
+    if (err) {
+      console.error('An error occurred:', err);
+      res.json({ success: false });
+    } else {
+      res.json({ success: true });
+    }
+  });
+});
+
+// Start the server
+app.listen(port, () => {
+  console.log(`Server is listening on port ${port}`);
+});
+
 
 const homeStartingContent = "Lacus vel facilisis volutpat est velit egestas dui id ornare. Semper auctor neque vitae tempus quam. Sit amet cursus sit amet dictum sit amet justo. Viverra tellus in hac habitasse. Imperdiet proin fermentum leo vel orci porta. Donec ultrices tincidunt arcu non sodales neque sodales ut. Mattis molestie a iaculis at erat pellentesque adipiscing. Magnis dis parturient montes nascetur ridiculus mus mauris vitae ultricies. Adipiscing elit ut aliquam purus sit amet luctus venenatis lectus. Ultrices vitae auctor eu augue ut lectus arcu bibendum at. Odio euismod lacinia at quis risus sed vulputate odio ut. Cursus mattis molestie a iaculis at erat pellentesque adipiscing.";
 const aboutContent = "Hac habitasse platea dictumst vestibulum rhoncus est pellentesque. Dictumst vestibulum rhoncus est pellentesque elit ullamcorper. Non diam phasellus vestibulum lorem sed. Platea dictumst quisque sagittis purus sit. Egestas sed sed risus pretium quam vulputate dignissim suspendisse. Mauris in aliquam sem fringilla. Semper risus in hendrerit gravida rutrum quisque non tellus orci. Amet massa vitae tortor condimentum lacinia quis vel eros. Enim ut tellus elementum sagittis vitae. Mauris ultrices eros in cursus turpis massa tincidunt dui.";
 const contactContent = "Scelerisque eleifend donec pretium vulputate sapien. Rhoncus urna neque viverra justo nec ultrices. Arcu dui vivamus arcu felis bibendum. Consectetur adipiscing elit duis tristique. Risus viverra adipiscing at in tellus integer feugiat. Sapien nec sagittis aliquam malesuada bibendum arcu vitae. Consequat interdum varius sit amet mattis. Iaculis nunc sed augue lacus. Interdum posuere lorem ipsum dolor sit amet consectetur adipiscing elit. Pulvinar elementum integer enim neque. Ultrices gravida dictum fusce ut placerat orci nulla. Mauris in aliquam sem fringilla ut morbi tincidunt. Tortor posuere ac ut consequat semper viverra nam libero.";
 
-const app = express();
 
 app.set('view engine', 'ejs');
 
 app.use(bodyParser.urlencoded({extended: true}));
 app.use(express.static("public"));
 
-mongoose.connect("mongodb://localhost:27017/blogDB", {useNewUrlParser: true});
+
 
 const postSchema = {
   title: String,
